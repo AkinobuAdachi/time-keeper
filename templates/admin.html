@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>管理画面 — タイムキーパー</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700;900&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --bg: #0d1f2d;
+    --surface: #142536;
+    --surface2: #1a2f42;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --danger: #ff4d4d;
+    --success: #4dff91;
+    --text: #e8f4f8;
+    --muted: #4a6a7a;
+    --border: rgba(0,212,255,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    padding: 0 0 40px;
+  }
+
+  /* ヘッダー */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.1rem;
+    color: var(--accent);
+    flex: 1;
+  }
+  .status-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+  }
+  .status-dot.connected { background: var(--success); box-shadow: 0 0 8px var(--success); }
+
+  /* メインコンテナ */
+  .container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* カード */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 22px;
+  }
+  .card-title {
+    font-size: 0.75rem;
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  /* 大タイマー表示 */
+  .timer-display {
+    text-align: center;
+    padding: 16px 0;
+  }
+  .timer-status {
+    font-size: 0.85rem;
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--muted);
+    margin-bottom: 8px;
+    letter-spacing: 0.15em;
+  }
+  .timer-digits {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(3.5rem, 15vw, 6rem);
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    line-height: 1;
+    transition: color 0.3s;
+  }
+  .timer-digits.over { color: var(--danger); }
+
+  /* 操作ボタン */
+  .btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .btn {
+    padding: 14px 8px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-start {
+    background: var(--success);
+    color: #0a1a10;
+  }
+  .btn-start:disabled { background: #1a3a2a; color: var(--muted); cursor: not-allowed; }
+  .btn-pause {
+    background: var(--accent);
+    color: var(--bg);
+  }
+  .btn-pause:disabled { background: #0a2a3a; color: var(--muted); cursor: not-allowed; }
+  .btn-reset {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-bell-manual {
+    grid-column: 1 / -1;
+    background: var(--accent2);
+    color: #fff;
+    padding: 12px;
+  }
+
+  /* 設定フォーム */
+  .setting-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .setting-row:last-child { margin-bottom: 0; }
+
+  .setting-label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    min-width: 90px;
+    color: var(--text);
+  }
+
+  .time-inputs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+  }
+
+  input[type="number"] {
+    width: 64px;
+    padding: 8px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.1rem;
+    text-align: right;
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0,212,255,0.15);
+  }
+
+  .unit-lbl {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .toggle-wrap {
+    margin-left: auto;
+  }
+  .toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .toggle input { display: none; }
+  .toggle-track {
+    width: 44px; height: 24px;
+    background: var(--muted);
+    border-radius: 12px;
+    position: relative;
+    transition: background 0.2s;
+  }
+  .toggle input:checked ~ .toggle-track { background: var(--accent); }
+  .toggle-thumb {
+    position: absolute;
+    width: 18px; height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    top: 3px; left: 3px;
+    transition: left 0.2s;
+  }
+  .toggle input:checked ~ .toggle-track .toggle-thumb { left: 23px; }
+  .toggle-lbl {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .apply-btn {
+    padding: 8px 18px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-left: auto;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .apply-btn:hover { background: #33ddff; }
+
+  /* ベル行のハイライト */
+  .bell-row-done .setting-label { color: var(--success); }
+
+  /* 接続状態 */
+  .connection-bar {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-align: center;
+    padding: 8px;
+  }
+  .connection-bar.ok { color: var(--success); }
+  .connection-bar.err { color: var(--danger); }
+
+  /* レスポンシブ */
+  @media (max-width: 480px) {
+    .setting-label { min-width: 70px; font-size: 0.85rem; }
+    .timer-digits { font-size: 3.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎛️ 管理画面 — 学会タイムキーパー v0.2</h1>
+  <div class="status-dot" id="dot"></div>
+</header>
+
+<div class="container">
+
+  <!-- タイマー表示 -->
+  <div class="card">
+    <div class="card-title">CURRENT TIME</div>
+    <div class="timer-display">
+      <div class="timer-status" id="status-text">READY</div>
+      <div class="timer-digits" id="timer-digits">0:00</div>
+    </div>
+  </div>
+
+  <!-- 操作ボタン -->
+  <div class="card">
+    <div class="card-title">CONTROLS</div>
+    <div class="btn-row">
+      <button class="btn btn-start" id="btn-start" onclick="cmd('start')">▶ START</button>
+      <button class="btn btn-pause" id="btn-pause" onclick="cmd('pause')" disabled>⏸ PAUSE</button>
+      <button class="btn btn-reset" onclick="cmd('reset')">↺ RESET</button>
+      <button class="btn btn-bell-manual" onclick="manualBell()">🔔 手動ベル（1回）</button>
+    </div>
+  </div>
+
+  <!-- 発表時間設定 -->
+  <div class="card">
+    <div class="card-title">PRESENTATION TIME</div>
+    <div class="setting-row">
+      <span class="setting-label">発表時間</span>
+      <div class="time-inputs">
+        <input type="number" id="total-min" value="3" min="0" max="99">
+        <span class="unit-lbl">分</span>
+        <input type="number" id="total-sec" value="0" min="0" max="59">
+        <span class="unit-lbl">秒</span>
+      </div>
+      <button class="apply-btn" onclick="applyTotal()">適用</button>
+    </div>
+  </div>
+
+  <!-- ベル設定 -->
+  <div class="card">
+    <div class="card-title">BELL SETTINGS</div>
+
+    <div class="setting-row" id="bell-row-0">
+      <span class="setting-label">ベル1回</span>
+      <div class="time-inputs">
+        <input type="number" id="bell-min-0" value="1" min="0" max="99">
+        <span class="unit-lbl">分</span>
+        <input type="number" id="bell-sec-0" value="0" min="0" max="59">
+        <span class="unit-lbl">秒 経過</span>
+      </div>
+      <div class="toggle-wrap">
+        <label class="toggle">
+          <input type="checkbox" id="bell-on-0" checked onchange="applyBell(0)">
+          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+          <span class="toggle-lbl">ON</span>
+        </label>
+      </div>
+      <button class="apply-btn" onclick="applyBell(0)">適用</button>
+    </div>
+
+    <div class="setting-row" id="bell-row-1">
+      <span class="setting-label">ベル2回</span>
+      <div class="time-inputs">
+        <input type="number" id="bell-min-1" value="2" min="0" max="99">
+        <span class="unit-lbl">分</span>
+        <input type="number" id="bell-sec-1" value="0" min="0" max="59">
+        <span class="unit-lbl">秒 経過</span>
+      </div>
+      <div class="toggle-wrap">
+        <label class="toggle">
+          <input type="checkbox" id="bell-on-1" checked onchange="applyBell(1)">
+          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+          <span class="toggle-lbl">ON</span>
+        </label>
+      </div>
+      <button class="apply-btn" onclick="applyBell(1)">適用</button>
+    </div>
+
+    <div class="setting-row" id="bell-row-2">
+      <span class="setting-label">ベル3回</span>
+      <div class="time-inputs">
+        <input type="number" id="bell-min-2" value="3" min="0" max="99">
+        <span class="unit-lbl">分</span>
+        <input type="number" id="bell-sec-2" value="0" min="0" max="59">
+        <span class="unit-lbl">秒 経過</span>
+      </div>
+      <div class="toggle-wrap">
+        <label class="toggle">
+          <input type="checkbox" id="bell-on-2" checked onchange="applyBell(2)">
+          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+          <span class="toggle-lbl">ON</span>
+        </label>
+      </div>
+      <button class="apply-btn" onclick="applyBell(2)">適用</button>
+    </div>
+  </div>
+
+  <div class="connection-bar" id="conn-bar">接続中...</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+const socket = io();
+const dot = document.getElementById('dot');
+const connBar = document.getElementById('conn-bar');
+
+socket.on('connect', () => {
+  dot.classList.add('connected');
+  connBar.textContent = '✓ サーバー接続済み';
+  connBar.className = 'connection-bar ok';
+});
+socket.on('disconnect', () => {
+  dot.classList.remove('connected');
+  connBar.textContent = '✗ サーバー切断 — 再接続中...';
+  connBar.className = 'connection-bar err';
+});
+
+socket.on('state', (s) => {
+  updateUI(s);
+});
+
+function fmtTime(sec) {
+  const sign = sec < 0 ? '-' : '';
+  const abs = Math.abs(Math.round(sec));
+  const m = Math.floor(abs / 60);
+  const ss = abs % 60;
+  return `${sign}${m}:${String(ss).padStart(2,'0')}`;
+}
+
+function updateUI(s) {
+  const digits = document.getElementById('timer-digits');
+  const statusEl = document.getElementById('status-text');
+  const btnStart = document.getElementById('btn-start');
+  const btnPause = document.getElementById('btn-pause');
+
+  digits.textContent = fmtTime(s.remaining_sec);
+  digits.classList.toggle('over', s.over);
+
+  if (!s.running && !s.paused) {
+    statusEl.textContent = 'READY';
+    btnStart.textContent = '▶ START';
+    btnStart.disabled = false;
+    btnPause.disabled = true;
+  } else if (s.running && !s.paused) {
+    statusEl.textContent = s.over ? '⚠ 超過中' : '▶ 計測中';
+    btnStart.disabled = true;
+    btnPause.disabled = false;
+    btnPause.textContent = '⏸ PAUSE';
+  } else if (s.paused) {
+    statusEl.textContent = '⏸ 一時停止';
+    btnStart.textContent = '▶ 再開';
+    btnStart.disabled = false;
+    btnPause.disabled = true;
+  }
+
+  // ベルのトリガー状態をラベルで表現
+  if (s.bells) {
+    s.bells.forEach((b, i) => {
+      const row = document.getElementById(`bell-row-${i}`);
+      if (row) {
+        row.classList.toggle('bell-row-done', b.triggered);
+      }
+    });
+  }
+
+  // 初回接続時に設定値を反映
+  if (!window._settingsLoaded && s.bells) {
+    window._settingsLoaded = true;
+    const tm = Math.floor(s.total_sec / 60);
+    const ts = s.total_sec % 60;
+    document.getElementById('total-min').value = tm;
+    document.getElementById('total-sec').value = ts;
+    s.bells.forEach((b, i) => {
+      document.getElementById(`bell-min-${i}`).value = Math.floor(b.at_sec / 60);
+      document.getElementById(`bell-sec-${i}`).value = b.at_sec % 60;
+      document.getElementById(`bell-on-${i}`).checked = b.enabled;
+    });
+  }
+}
+
+function cmd(action, extra) {
+  socket.emit('cmd', { action, ...extra });
+}
+
+function applyTotal() {
+  const minutes = parseInt(document.getElementById('total-min').value) || 0;
+  const seconds = parseInt(document.getElementById('total-sec').value) || 0;
+  cmd('set_total', { minutes, seconds });
+}
+
+function applyBell(i) {
+  const minutes = parseInt(document.getElementById(`bell-min-${i}`).value) || 0;
+  const seconds = parseInt(document.getElementById(`bell-sec-${i}`).value) || 0;
+  const enabled = document.getElementById(`bell-on-${i}`).checked;
+  cmd('set_bell', { index: i, minutes, seconds, enabled });
+}
+
+function manualBell() {
+  cmd('manual_bell', { count: 1 });
+}
+</script>
+</body>
+</html>

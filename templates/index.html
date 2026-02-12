@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学会タイムキーパー v0.2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --bg: #0d1f2d;
+    --surface: #142536;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --text: #e8f4f8;
+    --muted: #5a7a8a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  h1 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(1.4rem, 4vw, 2.2rem);
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 48px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 32px;
+    width: 100%;
+    max-width: 720px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid rgba(0,212,255,0.15);
+    border-radius: 16px;
+    padding: 32px 24px;
+    text-align: center;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .card:hover {
+    border-color: rgba(0,212,255,0.5);
+    transform: translateY(-4px);
+  }
+
+  .card-icon { font-size: 2.4rem; margin-bottom: 12px; }
+
+  .card h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--accent);
+  }
+  .card p {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  .qr-box {
+    width: 160px;
+    height: 160px;
+    margin: 0 auto 20px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0d1f2d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .qr-box img { width: 100%; height: 100%; }
+
+  .url-box {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    background: rgba(0,212,255,0.08);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--accent);
+    margin-bottom: 16px;
+    word-break: break-all;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .btn-admin {
+    background: var(--accent2);
+    color: #fff;
+  }
+  .btn-admin:hover { background: #ff8555; }
+  .btn-display {
+    background: var(--accent);
+    color: var(--bg);
+  }
+  .btn-display:hover { background: #33ddff; }
+
+  .footer {
+    margin-top: 48px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <h1>⏱ 学会タイムキーパー</h1>
+  <p class="subtitle">v0.2 — Real-time Sync via WebSocket</p>
+
+  <div class="cards">
+
+    <div class="card">
+      <div class="card-icon">🎛️</div>
+      <h2>管理画面</h2>
+      <p>司会・スタッフ用<br>時間設定・START・STOP・RESETを操作</p>
+      <div class="qr-box">
+        <img src="data:image/png;base64,{{QR_ADMIN}}" alt="QR Admin">
+      </div>
+      <div class="url-box">http://{{IP}}:8000/admin</div>
+      <a href="/admin" class="btn btn-admin">管理画面を開く</a>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">📺</div>
+      <h2>発表者画面</h2>
+      <p>演者・スクリーン用<br>残時間を大きく表示・ベル音はここで鳴る</p>
+      <div class="qr-box">
+        <img src="data:image/png;base64,{{QR_DISPLAY}}" alt="QR Display">
+      </div>
+      <div class="url-box">http://{{IP}}:8000/display</div>
+      <a href="/display" class="btn btn-display">発表者画面を開く</a>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <p>Server: http://{{IP}}:8000 &nbsp;|&nbsp; 全端末をこのWi-Fiに接続してください</p>
+  </div>
+</body>
+</html>
